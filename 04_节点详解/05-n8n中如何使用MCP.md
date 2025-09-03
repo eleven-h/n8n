@@ -58,8 +58,6 @@ MCP（Model Context Protocol）被称为“大模型的 USB 接口”，用于�
 3. 在 Tool 分支下实现工具逻辑：可用 HTTP Request 调第三方天气 API，或调用自有数据源，拼装输出
 4. 启动工作流，n8n 会监听 MCP 连接，并向外暴露该工具
 5. 在 Claude Desktop、Cursor 等支持 MCP 的客户端中，添加 n8n 的 MCP Server 地址，即可让 AI 直接调用 `get_weather`
-
-占位图：
 - ![MCP Server Trigger 参数示例](./images/mcp-server-trigger-config.png)
 
 进阶：
@@ -77,8 +75,6 @@ MCP（Model Context Protocol）被称为“大模型的 USB 接口”，用于�
 2. 配置 MCP Server 地址（本地或云端）
 3. 选择要调用的工具（如 `knowledge_search`），填写参数（如 `query`）
 4. 将返回结果传给下游节点（如写入 Notion、发送邮件、入库等）
-
-占位图：
 - ![MCP Client Tool 参数示例](./images/mcp-client-config.png)
 
 参考：本地快速起一个 Python MCP Server（示例）
