@@ -1,0 +1,537 @@
+{
+  "name": "My workflow 4",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -3872,
+        720
+      ],
+      "id": "241b993e-6e28-4e74-9165-68b6e8abda1e",
+      "name": "When chat message received",
+      "webhookId": "0f5fbbdf-2d53-4b73-bbba-22622396cf46"
+    },
+    {
+      "parameters": {
+        "jsCode": "const urls = $input.first().json.urlset.url\n\nconst productsName = [\n  \"amix40u\",\"sl10b\",\"aps10\",\"awm20d\",\"4k-streaming-camera-vm46\",\"vm46\",\n  \"audio-mixer-amix20b\",\"awm10t\",\"ccd10\",\"all-in-one-streaming-camera-vm33\",\n  \"awm20t\",\"all-in-one-streaming-camera-vm33-for-interview\",\n  \"all-in-one-streaming-camera-vm33-for-tennis\",\"portable-audio-mixer-amix40u\",\n  \"xlrline\",\"usb-condenser-microphone-am35u\",\"2k-pc-webcam-v02af\",\n  \"4k-pc-webcam-v08af\",\"product-test\",\"4k-capture-card-ccd10\",\n  \"usb-xlr-condenser-microphone-am25x\",\"usb-xlr-condenser-microphone-am20x\",\n  \"all-in-one-green-backdrop-kit-vk40\",\"dual-arm-desk-mount-st40\",\n  \"usb-condenser-microphone-am30u\",\"usb-xlr-dynamic-microphone-am15x\",\n  \"usb-xlr-dynamic-microphone-am10x\",\"product-test2\",\"4k-capture-card-ccd30\",\n  \"mobile-wireless-microphone-awm25t\",\"camera-desk-stand\",\n  \"wireless-microphone-awm20t\",\"camera-tripod-stand\",\n  \"boom-arm-microphone-stand-st20\",\"4k-wired-streaming-camera-vm20\"\n]\n\nconst domain = 'https://www.nearstream.us'\nfunction canonicalize(u){try{const x=new URL(u.trim());x.hash='';['utm_source','utm_medium','utm_campaign','utm_term','utm_content','gclid'].forEach(k=>x.searchParams.delete(k));x.pathname=x.pathname.replace(/\\/+$/,'');return x.toString();}catch{return u}}\nconst isProducts = (url)=> productsName.some(item=> url.replace(domain,'').startsWith('/'+item))\n\nconst dedup = new Set();\nfor (const item of urls){ const u = canonicalize(item.loc); if(isProducts(u)) dedup.add(u) }\nreturn { urls: [...dedup] }"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3232,
+        720
+      ],
+      "id": "cce3ab56-b16f-4a3f-9dc8-51d9cae16769",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "dataPropertyName": "results[0].html",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "head",
+              "cssSelector": "head",
+              "returnValue": "html"
+            },
+            {
+              "key": "content",
+              "cssSelector": "#nearstream-content",
+              "returnValue": "html"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -1968,
+        736
+      ],
+      "id": "68330a39-b6ab-4648-bb06-7862753098cf",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "const { head , content } =  $input.first().json\nconst url = $('Loop Over Items1').first().json.loc\nfunction extractSeoTagsByString(htmlString){const tagRegex=/<title[\\s\\S]*?<\\/title>|<meta[\\s\\S]*?>|<link[\\s\\S]*?>|<script[\\s\\S]*?<\\/script>/gi;const allPotentialTags=htmlString.match(tagRegex)||[];const seoRelevantTags=allPotentialTags.filter(tag=>{const lower=tag.toLowerCase();if(lower.startsWith('<title')) return true;if(lower.startsWith('<meta')) return true;if(lower.startsWith('<link')) return (lower.includes('rel=\"alternate\"')&&lower.includes('hreflang='))||lower.includes('rel=\"icon\"')||lower.includes('rel=\"canonical\"');if(lower.startsWith('<script')) return lower.includes('type=\"application/ld+json\"');return false;});return seoRelevantTags.join('\\n');}\nfunction removeAllAttributesExceptImg(htmlString){return htmlString.replace(/<([a-z0-9]+)([^>]*)>/gi,(match,tagName,attributes)=>{if(tagName.toLowerCase()==='img'){return match;}const isSelfClosing=attributes.trim().endsWith('/');return `<${tagName}${isSelfClosing ? ' />' : ''}>`;});}\nfunction removeHtmlComments(htmlString){return htmlString}\nreturn { data:  extractSeoTagsByString(head)+removeHtmlComments(removeAllAttributesExceptImg(content)), url, name: url.split('/').pop() }"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1712,
+        736
+      ],
+      "id": "0057a518-1fa0-4775-9057-3d2a56cd3e08",
+      "name": "Code",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nfunction canonicalize(u){try{const x=new URL(u.trim());x.hash='';['utm_source','utm_medium','utm_campaign','utm_term','utm_content','gclid'].forEach(k=>x.searchParams.delete(k));x.pathname=x.pathname.replace(/\\/+$/,'');return x.toString();}catch{return u}}\nconst url = canonicalize($json.url);\nconst content = $json.data || '';\nconst docId = crypto.createHash('sha1').update(url).digest('hex');\nconst contentHash = crypto.createHash('sha256').update(content,'utf8').digest('hex');\nreturn { ...$json, url, docId, contentHash };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1440,
+        720
+      ],
+      "id": "3d15b0af-083f-4314-9f88-1714e426d620",
+      "name": "Build Doc Fingerprint"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "output",
+        "options": {
+          "fileName": "={{new Date().toISOString()}}.txt"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -704,
+        720
+      ],
+      "id": "7b637370-c15c-4092-adbf-9d090b4350f2",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {},
+      "id": "b4021f0c-2f9e-4a2e-a854-7e90ba9f189a",
+      "name": "Embeddings Google Gemini",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "position": [
+        -432,
+        1056
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "binaryMode": "specificField",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "product_name",
+                "value": "={{ $('Code').item.json.name }}"
+              },
+              {
+                "name": "product_url",
+                "value": "={{ $('Code').item.json.url }}"
+              },
+              {
+                "name": "doc_id",
+                "value": "={{ $('Build Doc Fingerprint').item.json.docId }}"
+              },
+              {
+                "name": "content_hash",
+                "value": "={{ $('Build Doc Fingerprint').item.json.contentHash }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "3794e436-675f-48da-ab2c-54403fe659ac",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        -272,
+        944
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "id": "7904b827-7b70-4ff2-9cb5-f77ab5b9d029",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "position": [
+        -208,
+        1168
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "nearstream-content-0810",
+          "mode": "list",
+          "cachedResultName": "nearstream-content-0810"
+        },
+        "options": {}
+      },
+      "id": "45105f76-68d8-4abf-9b78-25561d8b9fd0",
+      "name": "Pinecone Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "position": [
+        -400,
+        720
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.chatInput }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3664,
+        720
+      ],
+      "id": "821e484c-9ff1-49ce-a82b-0a009a74f688",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.xml",
+      "typeVersion": 1,
+      "position": [
+        -3440,
+        720
+      ],
+      "id": "42867832-3e63-4064-9d16-79a829220da4",
+      "name": "XML1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "urls",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -2976,
+        720
+      ],
+      "id": "0bd13bb1-1a3a-47a7-9403-60bb66374bc4",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "maxItems": 100
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -2768,
+        720
+      ],
+      "id": "b66c251e-826c-4dbd-ac6b-dc682f6955c0",
+      "name": "Limit1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -2528,
+        720
+      ],
+      "id": "e20218eb-31a6-4fe5-9451-24adcc466ebd",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://49.51.248.71:11235/crawl",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=urls[0]",
+              "value": "={{ $json.loc }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2256,
+        736
+      ],
+      "id": "01076bfe-dbc3-4660-bae2-99548733839a",
+      "name": "HTTP Request4"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -2064,
+        960
+      ],
+      "id": "f2d2d88f-e971-4510-85f6-6d2d4c81bff5",
+      "name": "Wait2",
+      "webhookId": "ea1444ec-e5d8-44b5-9fed-22e72793c219"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=角色设定：\\n你是一名信息结构化和知识库开发的专家，请始终保持专业态度。你的任务是将 html 数据整理为适合 LLM 驱动的 RAG 知识库的结构化、易读格式。\\n\\n任务要求：  \\n\\n1. 内容解析  \\n   - 识别 markdown 数据中的关键内容和主要结构。  \\n\\n2. 结构化整理  \\n   - 以清晰的标题和分层逻辑组织信息，使其易于检索和理解。  \\n   - 保留所有可能对回答用户查询有价值的细节。  \\n\\n3. 创建 FAQ（如适用）  \\n   - 根据内容提炼出常见问题，并提供清晰、直接的解答。  \\n\\n4. 提升可读性  \\n   - 采用项目符号、编号列表、段落分隔等格式优化排版，使内容更直观。  \\n\\n5. 优化输出  \\n   - 严格去除 AI 生成的附加说明，仅保留清理后的核心数据。 \\n\\n响应规则：  \\n\\n1. 完整性：确保所有相关信息完整保留，避免丢失对搜索和理解有价值的内容。  \\n2. 精准性：FAQ 需紧密围绕内容，确保清晰、简洁且符合用户需求。  \\n3. 结构优化：确保最终输出便于分块存储、向量化处理，并支持高效检索。\\n\\n数据输入：\\n<html>{{ $json.data }}</html>\\n语言：\\n输出 英文",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -1136,
+        720
+      ],
+      "id": "db39c274-f5ac-43cb-bc99-721ddc7010a6",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        992
+      ],
+      "id": "84bf530e-0dca-45df-9d67-f77f177f842a",
+      "name": "Google Gemini Chat Model1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Build Doc Fingerprint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Doc Fingerprint": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "XML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "XML1": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Limit1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "91a592d3-d304-47b0-a989-8dbc3334efb5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ea86eebcb07625f377904bd28142786dbc982f46592e12f9679e17275742c451"
+  },
+  "id": "xRi2v6SE0BEa9gWI",
+  "tags": []
+}

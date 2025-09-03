@@ -1,0 +1,1851 @@
+{
+  "name": "爬虫2.0-添加分类功能",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -5040,
+        2032
+      ],
+      "id": "31448e1e-cd03-4022-bd2f-53d4da75acdb",
+      "name": "When chat message received",
+      "webhookId": "0f5fbbdf-2d53-4b73-bbba-22622396cf46"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.chatInput }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -4960,
+        -32
+      ],
+      "id": "0e09ff88-c64f-4c5d-9b51-38ee7952f851",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.xml",
+      "typeVersion": 1,
+      "position": [
+        -4736,
+        -32
+      ],
+      "id": "9162070b-89c5-4d1e-90f6-8cdaf24c2427",
+      "name": "XML"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "urls",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -4016,
+        -16
+      ],
+      "id": "ddc82698-d190-4a7c-b2a4-ac388d02231f",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "maxItems": 6
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -3680,
+        -16
+      ],
+      "id": "9abcb5f2-54d4-4801-b5a5-d08bc058e1cd",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "batchSize": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -3424,
+        -16
+      ],
+      "id": "25b9ff76-b26f-4e68-926a-7a09a68820ec",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=角色设定：\n你是一名信息结构化和知识库开发的专家，请始终保持专业态度。你的任务是将 html 数据整理为适合 LLM 驱动的 RAG 知识库的结构化、易读格式。\n\n任务要求：  \n\n1. 内容解析  \n   - 识别 markdown 数据中的关键内容和主要结构。  \n\n2. 结构化整理  \n   - 以清晰的标题和分层逻辑组织信息，使其易于检索和理解。  \n   - 保留所有可能对回答用户查询有价值的细节。  \n\n3. 创建 FAQ（如适用）  \n   - 根据内容提炼出常见问题，并提供清晰、直接的解答。  \n\n4. 提升可读性  \n   - 采用项目符号、编号列表、段落分隔等格式优化排版，使内容更直观。  \n\n5. 优化输出  \n   - 严格去除 AI 生成的附加说明，仅保留清理后的核心数据。 \n\n响应规则：  \n\n1. 完整性：确保所有相关信息完整保留，避免丢失对搜索和理解有价值的内容。  \n2. 精准性：FAQ 需紧密围绕内容，确保清晰、简洁且符合用户需求。  \n3. 结构优化：确保最终输出便于分块存储、向量化处理，并支持高效检索。\n\n数据输入：\n<html>{{ $('Code').item.json.data }}</html>\n语言：\n输出 英文",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -1408,
+        -16
+      ],
+      "id": "d354379a-1cd0-41f3-bdb3-5286ef09cc3c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -2848,
+        224
+      ],
+      "id": "f934f9da-e4d6-436f-bacb-9c66488258ba",
+      "name": "Wait1",
+      "webhookId": "ea1444ec-e5d8-44b5-9fed-22e72793c219"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1424,
+        192
+      ],
+      "id": "cd3f4809-927b-43c3-84b9-8e9cbcf4aaf4",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "FKwXu1hcWcuxfSgI",
+          "name": "Google Gemini(PaLM) Api account luca.li"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "dataPropertyName": "results[0].html",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "head",
+              "cssSelector": "head",
+              "returnValue": "html"
+            },
+            {
+              "key": "content",
+              "cssSelector": "#website-content",
+              "returnValue": "html"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -2592,
+        0
+      ],
+      "id": "525a6f98-615d-4fa1-b3f6-6e6421fac5b7",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// const { head , content } =  $input.first().json\nconst head = $json.head\nconst content =$json.content\nconst url = $('HTTP Request6').item.json.results[0].url\n\n\nconst path = url.split('/').slice(3).join('/'); // 去掉协议、域名、第一级路径\nconst name = path.startsWith('/') ? path.substring(1) : path;\n\n// 如果结果为空，回退到默认值\nconst finalName = name || 'unknown';\n/**\n * [纯字符串实现] 从 HTML 字符串中提取并保留对 SEO 文案至关重要的标签。\n * 此函数不依赖 DOM 解析，完全通过正则表达式和字符串方法实现。\n *\n * @param {string} htmlString - 包含 <head> 内容的 HTML 字符串。\n * @returns {string} - 一个仅包含 SEO 相关标签的、格式化好的 HTML 字符串。\n */\nfunction extractSeoTagsByString(htmlString) {\n  // 1. 定义一个正则表达式，用于捕获所有可能相关的标签。\n  //    - /<title[\\s\\S]*?<\\/title>/gi: 匹配 <title>...</title> 标签块\n  //    - /<meta[\\s\\S]*?>/gi: 匹配所有自闭合的 <meta> 标签\n  //    - /<link[\\s\\S]*?>/gi: 匹配所有自闭合的 <link> 标签\n  //    - /<script[\\s\\S]*?<\\/script>/gi: 匹配 <script>...</script> 标签块\n  const tagRegex = /<title[\\s\\S]*?<\\/title>|<meta[\\s\\S]*?>|<link[\\s\\S]*?>|<script[\\s\\S]*?<\\/script>/gi;\n\n  // 2. 从原始 HTML 中找出所有匹配的标签字符串。\n  const allPotentialTags = htmlString.match(tagRegex) || [];\n\n  // 3. 过滤数组，只保留符合我们 SEO \"白名单\" 规则的标签。\n  const seoRelevantTags = allPotentialTags.filter(tag => {\n    // 将标签转为小写，以便进行不区分大小写的匹配\n    const lowerCaseTag = tag.toLowerCase();\n\n    // 规则 a: 如果是 <title> 标签，保留\n    if (lowerCaseTag.startsWith('<title')) {\n      return true;\n    }\n\n    // 规则 b: 如果是 <meta> 标签，全部保留（因为它们通常都与SEO、社交分享或页面配置相关）\n    if (lowerCaseTag.startsWith('<meta')) {\n      return true;\n    }\n\n    // 规则 c: 如果是 <link> 标签，则需要满足特定条件\n    if (lowerCaseTag.startsWith('<link')) {\n      // 保留 hreflang 或 icon 标签。rel=\"canonical\" 也很重要，一并加入判断。\n      return (\n        (lowerCaseTag.includes('rel=\"alternate\"') && lowerCaseTag.includes('hreflang=')) ||\n        lowerCaseTag.includes('rel=\"icon\"') ||\n        lowerCaseTag.includes('rel=\"canonical\"')\n      );\n    }\n\n    // 规则 d: 如果是 <script> 标签，只保留 JSON-LD 结构化数据脚本\n    if (lowerCaseTag.startsWith('<script')) {\n      return lowerCaseTag.includes('type=\"application/ld+json\"');\n    }\n\n    // 其他所有情况（如普通JS脚本、CSS链接等被捕获的）都舍弃\n    return false;\n  });\n\n  // 4. 将最终筛选出的标签数组用换行符连接成一个字符串并返回。\n  return seoRelevantTags.join('\\n');\n}\n\n\n/**\n * [更新版] 使用正则表达式移除所有标签的属性，但保留 <img> 标签。\n * @param {string} htmlString - 原始的 HTML 字符串。\n * @returns {string} - 处理后的 HTML 字符串。\n */\nfunction removeAllAttributesExceptImg(htmlString) {\n  // 正则表达式与之前相同，关键在于替换函数的逻辑\n  return htmlString.replace(/<([a-z0-9]+)([^>]*)>/gi, (match, tagName, attributes) => {\n    \n    // 新增判断：如果标签名是 'img' (不区分大小写)，则不做任何处理，直接返回原始标签字符串\n    if (tagName.toLowerCase() === 'img') {\n      return match; // match 变量就是完整的原始标签，如 <img src=\"...\" alt=\"...\">\n    }\n\n    // 对于其他所有标签，执行之前的逻辑：移除属性\n    const isSelfClosing = attributes.trim().endsWith('/');\n    return `<${tagName}${isSelfClosing ? ' />' : ''}>`;\n  });\n}\n\n/**\n * 使用正则表达式从 HTML 字符串中移除所有注释。\n * @param {string} htmlString - 原始的 HTML 字符串。\n * @returns {string} - 移除了注释的 HTML 字符串。\n */\nfunction removeHtmlComments(htmlString) {\n  // 正则表达式 //g 解释:\n  // 匹配注释的结束\n  // g       全局匹配，确保移除所有注释\n  return htmlString;\n}\n\n// 2. 调用函数并打印结果\nreturn {\n  data:  extractSeoTagsByString(head) + removeHtmlComments(removeAllAttributesExceptImg(content)),\n  url: url,\n  name: finalName\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2352,
+        0
+      ],
+      "id": "7068d268-42d1-4dc1-ba6b-3daad6df1628",
+      "name": "Code",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const urls = $input.first().json.urlset.url\n\nconst productsName = [\n      \"amix40u\", \"sl10b\", \"aps10\", \"awm20d\", \"4k-streaming-camera-vm46\", \"vm46\",\n      \"audio-mixer-amix20b\", \"awm10t\", \"ccd10\", \"all-in-one-streaming-camera-vm33\",\n      \"awm20t\", \"all-in-one-streaming-camera-vm33-for-interview\",\n      \"all-in-one-streaming-camera-vm33-for-tennis\", \"portable-audio-mixer-amix40u\",\n      \"xlrline\", \"usb-condenser-microphone-am35u\", \"2k-pc-webcam-v02af\",\n      \"4k-pc-webcam-v08af\", \"product-test\", \"4k-capture-card-ccd10\",\n      \"usb-xlr-condenser-microphone-am25x\", \"usb-xlr-condenser-microphone-am20x\",\n      \"all-in-one-green-backdrop-kit-vk40\", \"dual-arm-desk-mount-st40\",\n      \"usb-condenser-microphone-am30u\", \"usb-xlr-dynamic-microphone-am15x\",\n      \"usb-xlr-dynamic-microphone-am10x\", \"product-test2\", \"4k-capture-card-ccd30\",\n      \"mobile-wireless-microphone-awm25t\", \"camera-desk-stand\",\n      \"wireless-microphone-awm20t\", \"camera-tripod-stand\",\n      \"boom-arm-microphone-stand-st20\", \"4k-wired-streaming-camera-vm20\"\n]\n\nconst domain = 'https://www.nearstream.us'\n\nconst isProducts = (url)=> productsName.some(item=> url.replace(domain,'').startsWith('/'+item))\n\nconst isBlog = (url)=> url.replace(domain,'').startsWith('/blog');\n\nconst isSoultion = (url)=> url.replace(domain,'').startsWith('/solutions');\n\nconst isHelpCenter = (url)=> url.replace(domain,'').startsWith('/help-center');\n\nconst isCompare = (url)=> url.replace(domain,'').startsWith('/compare');\n\nreturn {\n  urls: urls.filter(item=>isProducts(item.loc))\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4256,
+        -128
+      ],
+      "id": "706b0bc2-debe-44fa-9526-556fb8e49a00",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "=nearstream-content-0811",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "e4be9255-adf0-4678-8d05-73fc1046de4b",
+      "name": "Pinecone Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "position": [
+        -576,
+        160
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "pineconeApi": {
+          "id": "JwqMvk75VbFO0rw4",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "496e90c0-eadd-4f90-a342-96f6cbd09629",
+      "name": "Embeddings Google Gemini",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "position": [
+        -512,
+        384
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "f53SkLblTHGHukXF",
+          "name": "Google Gemini(PaLM) Api account "
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "binaryMode": "specificField",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "product_name",
+                "value": "={{ $('Code').item.json.name }}"
+              },
+              {
+                "name": "product_url",
+                "value": "={{ $('Code').item.json.url }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "548082eb-051c-409e-aeda-c2e2c5f68c34",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        -272,
+        400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "id": "44549886-e15e-4cf3-ac86-59aa2259d6e5",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "position": [
+        -272,
+        608
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "output",
+        "options": {
+          "fileName": "={{new Date().toISOString()}}.txt"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -816,
+        160
+      ],
+      "id": "5a1d4f3b-8f45-4212-a2ff-44fda32f622e",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return (() => {\n  function canonicalize(u) {\n    try {\n      const x = new URL(String(u).trim());\n      x.hash = '';\n      ['utm_source','utm_medium','utm_campaign','utm_term','utm_content','gclid']\n        .forEach(k => x.searchParams.delete(k));\n      x.pathname = x.pathname.replace(/\\/+$/, '');\n      return x.toString();\n    } catch { return String(u) }\n  }\n\n  // 纯 JS FNV-1a 64 位（BigInt 版）\n  function fnv1a64(str) {\n    let hash = 0xcbf29ce484222325n;       // offset basis\n    const prime = 0x100000001b3n;          // FNV prime\n    \n    for (let i = 0; i < str.length; i++) {\n      const cp = str.codePointAt(i);\n      hash ^= BigInt(cp);\n      hash = (hash * prime) & 0xffffffffffffffffn; // 64-bit\n      if (cp > 0xFFFF) i++; // 跳过代理对\n    }\n    \n    return hash.toString(16).padStart(16, '0');\n  }\n\n  const url = canonicalize($json.url);     // 规范化 URL\n  const docId = fnv1a64(url);                            // 稳定页级 ID\n\n  return { ...$input.json, url, docId };\n})();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2000,
+        -16
+      ],
+      "id": "0ae1626f-d6f9-460b-bf0a-83238b5bc3ec",
+      "name": "Build Doc Fingerprint"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://nearstream-content-0811-6zgnttt.svc.aped-4627-b74a.pinecone.io/vectors/delete",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "pcsk_4vDqZV_S6rjUbzXmLNjFm8sBb8F6kdyHP8mfQzv9oJCpCnUNbaGrLQxGMcwRrBmQRpa289"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"filter\": { \"doc_id\": \"{{ $json.docId }}\" },\n  \"namespace\": \"\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1728,
+        -16
+      ],
+      "id": "14b92593-b421-439e-8521-0c21f640de9d",
+      "name": "HTTP Request4",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## 去重+增量更新\n### docld:页级主键，一次性定位删除所有的旧向量，覆盖式更新",
+        "height": 512,
+        "width": 480
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2032,
+        -320
+      ],
+      "typeVersion": 1,
+      "id": "55520f10-40c6-4f9f-91a7-f7a9c908b53e",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('When chat message received').item.json.chatInput }}",
+                    "rightValue": "nearstream",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "01f47188-6ffe-499e-9704-1a4ae90d98cd"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "10c23aa3-7f4f-405a-a825-3a9460acb926",
+                    "leftValue": "={{ $('When chat message received').item.json.chatInput }}",
+                    "rightValue": "=nearhub",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -4512,
+        -32
+      ],
+      "id": "31db4b67-7f5d-40e0-9ba3-0c2d7cb4bdf2",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://49.51.248.71:11235/crawl",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=urls[0]",
+              "value": "={{ $json.loc }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3072,
+        0
+      ],
+      "id": "98bbab1a-94fe-48ef-a0b3-3a5f625dc64b",
+      "name": "HTTP Request6"
+    },
+    {
+      "parameters": {
+        "jsCode": "const urls = $input.first().json.urlset.url\n\n// 只返回前10个URL测试\nreturn { \n  urls: urls\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4256,
+        80
+      ],
+      "id": "64cc3d04-e288-4800-99e1-d9eaac22cd53",
+      "name": "统一split-out接受名称"
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ $('AI Agent').item.json.output }}",
+        "name": "={{ $('Code').item.json.name }}.txt",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1Gl_K2UHncCG261fl_6-jlWD94PCLp5Vc",
+          "mode": "list",
+          "cachedResultName": "nearhub-llm",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1Gl_K2UHncCG261fl_6-jlWD94PCLp5Vc"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -128,
+        -272
+      ],
+      "id": "ff451f80-ac7f-41b4-bcf3-3379ea8f78b2",
+      "name": "Create file from text",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "exA4ugvlpIBhgN4s",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d309f53a-b559-4228-b90d-a3d5432655ba",
+              "leftValue": "={{ $json.files.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -368,
+        -288
+      ],
+      "id": "aa4b2b5d-13ee-4379-b810-ca366e018651",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "=name='{{ $('Code').item.json.name }}.txt' and '1LGkCN6x2rf3Fz3kUeL-jQ7RECg2ncCAP' in parents"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -688,
+        -352
+      ],
+      "id": "55d50d66-d199-4aa7-86fc-8e70b9c744bf",
+      "name": "Search Google Drive for File-nearstream",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1Xwd2v6ddRSt9kIp",
+          "name": "Header Auth account"
+        },
+        "googleDriveOAuth2Api": {
+          "id": "exA4ugvlpIBhgN4s",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "=name='{{ $('Code').item.json.name }}.txt' and '1Gl_K2UHncCG261fl_6-jlWD94PCLp5Vc' in parents"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -672,
+        -144
+      ],
+      "id": "b2ecc8e2-406b-49cc-ab17-d97868f76bdc",
+      "name": "Search Google Drive for File-nearhub",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1Xwd2v6ddRSt9kIp",
+          "name": "Header Auth account"
+        },
+        "googleDriveOAuth2Api": {
+          "id": "exA4ugvlpIBhgN4s",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('When chat message received').item.json.chatInput }}",
+                    "rightValue": "nearstream",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "01f47188-6ffe-499e-9704-1a4ae90d98cd"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "10c23aa3-7f4f-405a-a825-3a9460acb926",
+                    "leftValue": "={{ $('When chat message received').item.json.chatInput }}",
+                    "rightValue": "=nearhub",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -928,
+        -208
+      ],
+      "id": "386f95fb-c0e6-4ee1-9698-dc3cb4347cc4",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "content": "## 1.0",
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -5184,
+        -320
+      ],
+      "id": "45a95d8a-5d40-4619-801e-e1f33d7471b7",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.chatInput }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -4704,
+        2032
+      ],
+      "id": "63c349c5-31f1-4780-abda-36991af58f33",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.xml",
+      "typeVersion": 1,
+      "position": [
+        -4480,
+        2032
+      ],
+      "id": "8b250d80-d9c8-47df-b657-e0ce892a21de",
+      "name": "XML1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "urls",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -3632,
+        2048
+      ],
+      "id": "35f88a01-28df-4252-b127-9451c385a05e",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "maxItems": 3
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -3424,
+        2048
+      ],
+      "id": "c273c105-f382-4b6e-855d-8146ce45bf72",
+      "name": "Limit1"
+    },
+    {
+      "parameters": {
+        "batchSize": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -3168,
+        2048
+      ],
+      "id": "4d71a825-a821-4d33-89c9-3e4350639c6f",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=角色设定：\n你是一名信息结构化和知识库开发的专家，请始终保持专业态度。你的任务是将 html 数据整理为适合 LLM 驱动的 RAG 知识库的结构化、易读格式。\n\n任务要求：  \n\n1. 内容解析  \n   - 识别 markdown 数据中的关键内容和主要结构。  \n\n2. 结构化整理  \n   - 以清晰的标题和分层逻辑组织信息，使其易于检索和理解。  \n   - 保留所有可能对回答用户查询有价值的细节。  \n\n3. 创建 FAQ（如适用）  \n   - 根据内容提炼出常见问题，并提供清晰、直接的解答。  \n\n4. 提升可读性  \n   - 采用项目符号、编号列表、段落分隔等格式优化排版，使内容更直观。  \n\n5. 优化输出  \n   - 严格去除 AI 生成的附加说明，仅保留清理后的核心数据。 \n\n响应规则：  \n\n1. 完整性：确保所有相关信息完整保留，避免丢失对搜索和理解有价值的内容。  \n2. 精准性：FAQ 需紧密围绕内容，确保清晰、简洁且符合用户需求。  \n3. 结构优化：确保最终输出便于分块存储、向量化处理，并支持高效检索。\n\n数据输入：\n<html>{{ $('Code1').item.json.data }}</html>\n语言：\n输出 英文",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -1152,
+        2048
+      ],
+      "id": "7261274d-a910-4b58-816e-3582e69f5b6b",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -2592,
+        2288
+      ],
+      "id": "6810baf4-b097-41c5-9d5a-581422308ece",
+      "name": "Wait",
+      "webhookId": "ea1444ec-e5d8-44b5-9fed-22e72793c219"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        2256
+      ],
+      "id": "fb0a29ef-0a94-4485-a037-f482ba6d3011",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "FKwXu1hcWcuxfSgI",
+          "name": "Google Gemini(PaLM) Api account luca.li"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "dataPropertyName": "results[0].html",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "head",
+              "cssSelector": "head",
+              "returnValue": "html"
+            },
+            {
+              "key": "content",
+              "cssSelector": "#website-content",
+              "returnValue": "html"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -2336,
+        2064
+      ],
+      "id": "bdfb7e29-e07e-4c18-9e39-47971a757118",
+      "name": "HTML1"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// const { head , content } =  $input.first().json\nconst head = $json.head\nconst content =$json.content\nconst url = $('HTTP Request7').item.json.results[0].url\n\n\nconst path = url.split('/').slice(3).join('/'); // 去掉协议、域名、第一级路径\nconst name = path.startsWith('/') ? path.substring(1) : path;\n\n// 如果结果为空，回退到默认值\nconst finalName = name || 'unknown';\n/**\n * [纯字符串实现] 从 HTML 字符串中提取并保留对 SEO 文案至关重要的标签。\n * 此函数不依赖 DOM 解析，完全通过正则表达式和字符串方法实现。\n *\n * @param {string} htmlString - 包含 <head> 内容的 HTML 字符串。\n * @returns {string} - 一个仅包含 SEO 相关标签的、格式化好的 HTML 字符串。\n */\nfunction extractSeoTagsByString(htmlString) {\n  // 1. 定义一个正则表达式，用于捕获所有可能相关的标签。\n  //    - /<title[\\s\\S]*?<\\/title>/gi: 匹配 <title>...</title> 标签块\n  //    - /<meta[\\s\\S]*?>/gi: 匹配所有自闭合的 <meta> 标签\n  //    - /<link[\\s\\S]*?>/gi: 匹配所有自闭合的 <link> 标签\n  //    - /<script[\\s\\S]*?<\\/script>/gi: 匹配 <script>...</script> 标签块\n  const tagRegex = /<title[\\s\\S]*?<\\/title>|<meta[\\s\\S]*?>|<link[\\s\\S]*?>|<script[\\s\\S]*?<\\/script>/gi;\n\n  // 2. 从原始 HTML 中找出所有匹配的标签字符串。\n  const allPotentialTags = htmlString.match(tagRegex) || [];\n\n  // 3. 过滤数组，只保留符合我们 SEO \"白名单\" 规则的标签。\n  const seoRelevantTags = allPotentialTags.filter(tag => {\n    // 将标签转为小写，以便进行不区分大小写的匹配\n    const lowerCaseTag = tag.toLowerCase();\n\n    // 规则 a: 如果是 <title> 标签，保留\n    if (lowerCaseTag.startsWith('<title')) {\n      return true;\n    }\n\n    // 规则 b: 如果是 <meta> 标签，全部保留（因为它们通常都与SEO、社交分享或页面配置相关）\n    if (lowerCaseTag.startsWith('<meta')) {\n      return true;\n    }\n\n    // 规则 c: 如果是 <link> 标签，则需要满足特定条件\n    if (lowerCaseTag.startsWith('<link')) {\n      // 保留 hreflang 或 icon 标签。rel=\"canonical\" 也很重要，一并加入判断。\n      return (\n        (lowerCaseTag.includes('rel=\"alternate\"') && lowerCaseTag.includes('hreflang=')) ||\n        lowerCaseTag.includes('rel=\"icon\"') ||\n        lowerCaseTag.includes('rel=\"canonical\"')\n      );\n    }\n\n    // 规则 d: 如果是 <script> 标签，只保留 JSON-LD 结构化数据脚本\n    if (lowerCaseTag.startsWith('<script')) {\n      return lowerCaseTag.includes('type=\"application/ld+json\"');\n    }\n\n    // 其他所有情况（如普通JS脚本、CSS链接等被捕获的）都舍弃\n    return false;\n  });\n\n  // 4. 将最终筛选出的标签数组用换行符连接成一个字符串并返回。\n  return seoRelevantTags.join('\\n');\n}\n\n\n/**\n * [更新版] 使用正则表达式移除所有标签的属性，但保留 <img> 标签。\n * @param {string} htmlString - 原始的 HTML 字符串。\n * @returns {string} - 处理后的 HTML 字符串。\n */\nfunction removeAllAttributesExceptImg(htmlString) {\n  // 正则表达式与之前相同，关键在于替换函数的逻辑\n  return htmlString.replace(/<([a-z0-9]+)([^>]*)>/gi, (match, tagName, attributes) => {\n    \n    // 新增判断：如果标签名是 'img' (不区分大小写)，则不做任何处理，直接返回原始标签字符串\n    if (tagName.toLowerCase() === 'img') {\n      return match; // match 变量就是完整的原始标签，如 <img src=\"...\" alt=\"...\">\n    }\n\n    // 对于其他所有标签，执行之前的逻辑：移除属性\n    const isSelfClosing = attributes.trim().endsWith('/');\n    return `<${tagName}${isSelfClosing ? ' />' : ''}>`;\n  });\n}\n\n/**\n * 使用正则表达式从 HTML 字符串中移除所有注释。\n * @param {string} htmlString - 原始的 HTML 字符串。\n * @returns {string} - 移除了注释的 HTML 字符串。\n */\nfunction removeHtmlComments(htmlString) {\n  // 正则表达式 //g 解释:\n  // 匹配注释的结束\n  // g       全局匹配，确保移除所有注释\n  return htmlString;\n}\n\n// 2. 调用函数并打印结果\nreturn {\n  data:  extractSeoTagsByString(head) + removeHtmlComments(removeAllAttributesExceptImg(content)),\n  url: url,\n  name: finalName\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2096,
+        2064
+      ],
+      "id": "269f6bbb-0169-4af3-9a07-58e93939b64e",
+      "name": "Code1",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "={{ $('Code2').item.json.vector }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "e62fe29e-3db7-4317-ba41-7c74823d18b8",
+      "name": "Pinecone Vector Store1",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "position": [
+        -368,
+        2224
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "pineconeApi": {
+          "id": "JwqMvk75VbFO0rw4",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "d1953ec7-aefd-4cb6-987e-d8ad3c7c89cc",
+      "name": "Embeddings Google Gemini1",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "position": [
+        -368,
+        2464
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "f53SkLblTHGHukXF",
+          "name": "Google Gemini(PaLM) Api account "
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "binaryMode": "specificField",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "product_name",
+                "value": "={{ $('Code1').item.json.name }}"
+              },
+              {
+                "name": "product_url",
+                "value": "={{ $('Code1').item.json.url }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "488b476b-bcfc-49d5-86e7-bacd99064438",
+      "name": "Default Data Loader1",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        -208,
+        2448
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "id": "4fe8a276-c988-4fee-8b33-35ce12e7b06b",
+      "name": "Recursive Character Text Splitter1",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "position": [
+        -208,
+        2656
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "output",
+        "options": {
+          "fileName": "={{new Date().toISOString()}}.txt"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -592,
+        2224
+      ],
+      "id": "b934ded5-857e-494c-92c1-2fca83fcd031",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return (() => {\n  function canonicalize(u) {\n    try {\n      const x = new URL(String(u).trim());\n      x.hash = '';\n      ['utm_source','utm_medium','utm_campaign','utm_term','utm_content','gclid']\n        .forEach(k => x.searchParams.delete(k));\n      x.pathname = x.pathname.replace(/\\/+$/, '');\n      return x.toString();\n    } catch { return String(u) }\n  }\n\n  // 纯 JS FNV-1a 64 位（BigInt 版）\n  function fnv1a64(str) {\n    let hash = 0xcbf29ce484222325n;       // offset basis\n    const prime = 0x100000001b3n;          // FNV prime\n    \n    for (let i = 0; i < str.length; i++) {\n      const cp = str.codePointAt(i);\n      hash ^= BigInt(cp);\n      hash = (hash * prime) & 0xffffffffffffffffn; // 64-bit\n      if (cp > 0xFFFF) i++; // 跳过代理对\n    }\n    \n    return hash.toString(16).padStart(16, '0');\n  }\n\n  const url = canonicalize($json.url);     // 规范化 URL\n  const docId = fnv1a64(url);                            // 稳定页级 ID\n\n  return { ...$input.json, url, docId };\n})();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1744,
+        2048
+      ],
+      "id": "65582557-757b-4cd2-b184-390658a138a6",
+      "name": "Build Doc Fingerprint1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{ $('Code2').item.json.vector }}-6zgnttt.svc.aped-4627-b74a.pinecone.io/vectors/delete",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "pcsk_4vDqZV_S6rjUbzXmLNjFm8sBb8F6kdyHP8mfQzv9oJCpCnUNbaGrLQxGMcwRrBmQRpa289"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"filter\": { \"doc_id\": \"{{ $json.docId }}\" },\n  \"namespace\": \"\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1472,
+        2048
+      ],
+      "id": "013af9ed-0a43-4192-8542-802a9c071b3f",
+      "name": "HTTP Request5",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('When chat message received').item.json.chatInput }}",
+                    "rightValue": "nearstream",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "01f47188-6ffe-499e-9704-1a4ae90d98cd"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "10c23aa3-7f4f-405a-a825-3a9460acb926",
+                    "leftValue": "={{ $('When chat message received').item.json.chatInput }}",
+                    "rightValue": "=nearhub",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -4256,
+        2032
+      ],
+      "id": "18e9370a-25b5-4225-a9bd-db81c0261512",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://49.51.248.71:11235/crawl",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=urls[0]",
+              "value": "={{ $json.loc }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2816,
+        2064
+      ],
+      "id": "aabb2170-fea1-4620-b9d4-12916b1dedf1",
+      "name": "HTTP Request7"
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ $('AI Agent1').item.json.output }}",
+        "name": "={{ $('Code1').item.json.name }}.txt",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Code2').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -80,
+        1872
+      ],
+      "id": "55254c85-a455-4df9-892c-862b7ddb8130",
+      "name": "Create file from text1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "exA4ugvlpIBhgN4s",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "=name='{{ $('Code1').item.json.name }}.txt' and '{{ $('Code2').item.json.id }}' in parents"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -608,
+        1856
+      ],
+      "id": "e15ed437-466e-48ec-9ec9-d908c38c7082",
+      "name": "Search Google Drive for File-nearstream1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1Xwd2v6ddRSt9kIp",
+          "name": "Header Auth account"
+        },
+        "googleDriveOAuth2Api": {
+          "id": "exA4ugvlpIBhgN4s",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const id = $input.first().json.id\nconst vector = $input.first().json.vector\nconst urls= $input.first().json.urls\nreturn {\n  id:id,\n  vector:vector,\n  urls:urls\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3808,
+        2048
+      ],
+      "id": "68d393ad-d546-4dd9-8bbc-8ef8944dd2fa",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const urls = $input.first().json.urlset.url\n\n// 只返回前10个URL测试\nreturn { \n  urls: urls,\n  id:\"1Gl_K2UHncCG261fl_6-jlWD94PCLp5Vc\",\n  vector:\"nearstream-content-0811\"\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4032,
+        2112
+      ],
+      "id": "68015996-d2c5-410f-a0fc-0e110d55ec47",
+      "name": "统一split-out接受名称1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d309f53a-b559-4228-b90d-a3d5432655ba",
+              "leftValue": "={{ $json.files.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -400,
+        1856
+      ],
+      "id": "c9a13d5d-df72-441d-8ad4-4354c0329c01",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const urls = $input.first().json.urlset.url\n\nconst productsName = [\n      \"amix40u\", \"sl10b\", \"aps10\", \"awm20d\", \"4k-streaming-camera-vm46\", \"vm46\",\n      \"audio-mixer-amix20b\", \"awm10t\", \"ccd10\", \"all-in-one-streaming-camera-vm33\",\n      \"awm20t\", \"all-in-one-streaming-camera-vm33-for-interview\",\n      \"all-in-one-streaming-camera-vm33-for-tennis\", \"portable-audio-mixer-amix40u\",\n      \"xlrline\", \"usb-condenser-microphone-am35u\", \"2k-pc-webcam-v02af\",\n      \"4k-pc-webcam-v08af\", \"product-test\", \"4k-capture-card-ccd10\",\n      \"usb-xlr-condenser-microphone-am25x\", \"usb-xlr-condenser-microphone-am20x\",\n      \"all-in-one-green-backdrop-kit-vk40\", \"dual-arm-desk-mount-st40\",\n      \"usb-condenser-microphone-am30u\", \"usb-xlr-dynamic-microphone-am15x\",\n      \"usb-xlr-dynamic-microphone-am10x\", \"product-test2\", \"4k-capture-card-ccd30\",\n      \"mobile-wireless-microphone-awm25t\", \"camera-desk-stand\",\n      \"wireless-microphone-awm20t\", \"camera-tripod-stand\",\n      \"boom-arm-microphone-stand-st20\", \"4k-wired-streaming-camera-vm20\"\n]\n\nconst domain = 'https://www.nearstream.us'\n\nconst isProducts = (url)=> productsName.some(item=> url.replace(domain,'').startsWith('/'+item))\n\nconst isBlog = (url)=> url.replace(domain,'').startsWith('/blog');\n\nconst isSoultion = (url)=> url.replace(domain,'').startsWith('/solutions');\n\nconst isHelpCenter = (url)=> url.replace(domain,'').startsWith('/help-center');\n\nconst isCompare = (url)=> url.replace(domain,'').startsWith('/compare');\n\nreturn {\n  urls: urls.filter(item=>isProducts(item.loc)),\n  id:\"1LGkCN6x2rf3Fz3kUeL-jQ7RECg2ncCAP\",\n  vector:\"nearstream-content-0811\"\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4032,
+        1984
+      ],
+      "id": "dc29af55-e1d3-4fa3-8eb3-cb6d28dcecd9",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "content": "### 多网站爬取\n1.  **在 `Switch` 节点中添加网站判断条件**\n区分需要爬取 `nearstream` 还是 `nearhub` 等不同网站。\n\n2.  **添加 `Code` 节点进行数据过滤与配置**\n    *   **返回值**：筛选后的 URL 列表，本次处理所需的配置信息：id和vector。\n        ```javascript\n        return {\n          urls: urls.filter(item => isProducts(item.loc)),\n          id: \"1LGkCN6x2rf3Fz3kUeL-jQ7RECg2ncCAP\", // Google Drive 中用于存储内容的文件夹 ID\n          vector: \"nearstream-content-0811\"       // Pinecone 中用于存储向量的索引（Index）名称\n        }\n        ```\n    *   **说明**：\n        *   `id`: 指定 Google Drive 的目标文件夹 ID，确保文件被归档到正确的目录。\n        *   `vector`: 指定 Pinecone 的目标索引名称，确保向量被存入正确的数据库。\n",
+        "height": 688,
+        "width": 544,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -4352,
+        1600
+      ],
+      "id": "ffa7e2d2-01fb-42fa-aa7a-991787a1e4c3",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## 去重+增量更新\n### 根据文件名查找并判断文件是否存在、\n#### 判断逻辑：\n如果 files.length > 0，即找到了至少一个文件，条件为 真 (true)。\n如果 files.length == 0，即没有找到任何文件，条件为 假 (false)。",
+        "height": 368,
+        "width": 480
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -672,
+        1680
+      ],
+      "typeVersion": 1,
+      "id": "50797c8c-8825-49df-804c-6c6e287109c6",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## 2.0",
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -5136,
+        1264
+      ],
+      "typeVersion": 1,
+      "id": "c611dd58-71eb-4b07-ba45-560c8381f17b",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## 去重+增量更新\n### docld:页级主键，一次性定位删除所有的旧向量，覆盖式更新\n#### 实现逻辑：为每个网页生成一个基于其标准化 URL 的唯一 ID-docId,利用 docId 作为主键，在向量数据库中精准地删除所有与旧版本文档相关的向量记录。\n备注：onError 设置: continueRegularOutput\n即使删除操作失败（例如，该 docId 的向量在数据库中不存在），流程也会继续向下执行。",
+        "height": 368,
+        "width": 480
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1792,
+        1824
+      ],
+      "typeVersion": 1,
+      "id": "a130fb7e-5042-4b98-ac7f-72ffa22b6bd3",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "XML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "XML": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Build Doc Fingerprint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Doc Fingerprint": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "统一split-out接受名称",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request6": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "统一split-out接受名称": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create file from text": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Create file from text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Google Drive for File-nearstream": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Google Drive for File-nearhub": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Search Google Drive for File-nearstream",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search Google Drive for File-nearhub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "XML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "XML1": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Limit1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Search Google Drive for File-nearstream1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Build Doc Fingerprint1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader1": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter1": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader1",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Doc Fingerprint1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request5": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "统一split-out接受名称1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request7": {
+      "main": [
+        [
+          {
+            "node": "HTML1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Google Drive for File-nearstream1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "统一split-out接受名称1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Create file from text1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "eca66e3e-9dde-4dbd-8185-3a5bc7779c2b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "27bb961065add72c965e719bfc4ea85fc084efb8149ffb7d4555a038739e5304"
+  },
+  "id": "OZEm465g8u8l8iGE",
+  "tags": []
+}
