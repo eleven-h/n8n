@@ -210,8 +210,8 @@ n8n/
 
 **如果这个教程对你有帮助，请给它一个 ⭐ Star！**
 
-[![GitHub stars](https://img.shields.io/github/stars/your-username/n8n?style=social)](https://github.com/your-username/n8n)
-[![GitHub forks](https://img.shields.io/github/forks/your-username/n8n?style=social)](https://github.com/your-username/n8n)
-[![GitHub issues](https://img.shields.io/github/issues/your-username/n8n)](https://github.com/your-username/n8n/issues)
+[![GitHub stars](https://img.shields.io/github/stars/eleven-h/n8n?style=social)](https://github.com/eleven-h/n8n)
+[![GitHub forks](https://img.shields.io/github/forks/eleven-h/n8n?style=social)](https://github.com/eleven-h/n8n)
+[![GitHub issues](https://img.shields.io/github/issues/eleven-h/n8n)](https://github.com/eleven-h/n8n/issues)
 
 </div>
